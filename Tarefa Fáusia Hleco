@@ -1,0 +1,159 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef struct no {
+    int valor;
+    struct no *esquerda, *direita;
+} no;
+
+typedef struct pilha {
+    no* no;
+    struct pilha* prox;
+} pilha;
+
+
+no* criar_no(int valor) {
+    no* novo_no = (no*)malloc(sizeof(no));
+    novo_no->valor = valor;
+    novo_no->esquerda = NULL;
+    novo_no->direita = NULL;
+    return novo_no;
+}
+
+pilha* empilhar(pilha* topo, no* no) {
+    pilha* novo_item = (pilha*)malloc(sizeof(pilha));
+    novo_item->no = no;
+    novo_item->prox = topo;
+    return novo_item;
+}
+
+pilha* desempilhar(pilha* topo) {
+    if (topo == NULL) {
+        return NULL;
+    }
+    pilha* prox = topo->prox;
+    free(topo);
+    return prox;
+}
+
+void imprimir_em_ordem(no* raiz) {
+    pilha* p = NULL;
+    no* atual = raiz;
+
+    while (atual != NULL || p != NULL) {
+        while (atual != NULL) {
+            p = empilhar(p, atual);
+            atual = atual->esquerda;
+        }
+        atual = p->no;
+        p = desempilhar(p);
+        printf("%d ", atual->valor);
+        atual = atual->direita;
+    }
+}
+
+void busca_largura(no* raiz) {
+    if (raiz == NULL) {
+        return;
+    }
+
+    pilha* fila = NULL;
+    fila = empilhar(fila, raiz);
+
+    while (fila != NULL) {
+        no* atual = fila->no;
+        fila = desempilhar(fila);
+
+        printf("%d ", atual->valor);
+
+        if (atual->esquerda != NULL) {
+            fila = empilhar(fila, atual->esquerda);
+        }
+        if (atual->direita != NULL) {
+            fila = empilhar(fila, atual->direita);
+        }
+    }
+}
+
+void buscar_e_empilhar(no* raiz, int valor, pilha* caminho, pilha** dir) {
+    if (raiz == NULL) {
+        return;
+    }
+
+    pilha* novo_caminho = empilhar(caminho, raiz);
+
+    if (raiz->valor == valor) {
+        pilha* copia = novo_caminho;
+        while (copia != NULL) {
+            *dir = empilhar(*dir, copia->no);
+            copia = copia->prox;
+        }
+    }
+
+    buscar_e_empilhar(raiz->esquerda, valor, novo_caminho, dir);
+    buscar_e_empilhar(raiz->direita, valor, novo_caminho, dir);
+}
+
+void mostrar_dir(pilha* dir) {
+    pilha* caminho = dir;
+    while (caminho != NULL) {
+        pilha* elementos = caminho;
+        while (elementos != NULL) {
+            printf("%d", elementos->no->valor);
+            elementos = elementos->prox;
+            if (elementos != NULL) {
+                printf(" -> ");
+            }
+        }
+        printf("\n");
+        caminho = caminho->prox;
+    }
+}
+
+int main() {
+    no* raiz = criar_no(1);
+    raiz->esquerda = criar_no(2);
+    raiz->direita = criar_no(3);
+    raiz->esquerda->esquerda = criar_no(4);
+    raiz->esquerda->direita = criar_no(5);
+    raiz->direita->esquerda = criar_no(6);
+    raiz->direita->direita = criar_no(7);
+    raiz->esquerda->esquerda->esquerda = criar_no(8);
+    raiz->esquerda->esquerda->direita = criar_no(9);
+    raiz->esquerda->direita->esquerda = criar_no(10);
+    raiz->esquerda->direita->direita = criar_no(11);
+    raiz->direita->esquerda->esquerda = criar_no(12);
+    raiz->direita->esquerda->direita = criar_no(13);
+    raiz->direita->direita->esquerda = criar_no(14);
+    raiz->esquerda->esquerda->esquerda->esquerda = criar_no(15);
+    raiz->esquerda->esquerda->esquerda->direita = criar_no(16);
+    raiz->esquerda->esquerda->direita->esquerda = criar_no(17);
+    raiz->esquerda->esquerda->direita->direita = criar_no(18);
+    raiz->esquerda->direita->esquerda->esquerda = criar_no(19);
+    raiz->esquerda->direita->esquerda->direita = criar_no(20);
+
+    printf("Nós em ordem:\n");
+    imprimir_em_ordem(raiz);
+    printf("\n\n");
+
+    printf("Nós por largura:\n");
+    busca_largura(raiz);
+    printf("\n\n");
+
+    int valor_a_buscar = 7;
+    pilha* dir = NULL;
+    printf("Buscando o nó com valor %d:\n", valor_a_buscar);
+    buscar_e_empilhar(raiz, valor_a_buscar, NULL, &dir);
+    mostrar_dir(dir);
+    printf("\n");
+
+    free(raiz);
+
+    while (dir != NULL) {
+        pilha* temp = dir;
+        dir = dir->prox;
+        free(temp);
+    }
+
+    return 0;
+}
