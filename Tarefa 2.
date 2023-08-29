@@ -1,0 +1,141 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define TAM 3
+
+typedef struct Nodo {
+    struct Nodo *esq;
+    struct Nodo *dir;
+    struct Estado *estado;
+} nodo;
+
+typedef struct Estado {
+    int numeros[TAM][TAM];
+} estado;
+
+nodo *criar_nodo(estado *e) {
+    nodo *novo_nodo = malloc(sizeof(nodo));
+    novo_nodo->estado = e;
+    novo_nodo->esq = novo_nodo->dir = NULL;
+    return novo_nodo;
+}
+
+estado *criar_estado(int numeros[TAM][TAM]) {
+    estado *novo_estado = malloc(sizeof(estado));
+    for (int i = 0; i < TAM; i++) {
+        for (int j = 0; j < TAM; j++) {
+            novo_estado->numeros[i][j] = numeros[i][j];
+        }
+    }
+    return novo_estado;
+}
+
+int eh_final(estado *e) {
+    int valor = 1;
+    for (int i = 0; i < TAM; i++) {
+        for (int j = 0; j < TAM; j++) {
+            if (e->numeros[i][j] != valor) {
+                if (i == TAM - 1 && j == TAM - 1 && e->numeros[i][j] == 0) {
+                    continue;
+                }
+                return 0;
+            }
+            valor++;
+        }
+    }
+    return 1;
+}
+
+void gerar_estados_subsequentes(estado *e, nodo **raiz) {
+    int i, j;
+
+    for (i = 0; i < TAM; i++) {
+        for (j = 0; j < TAM; j++) {
+            if (e->numeros[i][j] == 0) {
+                int movimentos[4][2] = { {-1, 0}, {1, 0}, {0, -1}, {0, 1} };
+
+                for (int m = 0; m < 4; m++) {
+                    int k = i + movimentos[m][0];
+                    int l = j + movimentos[m][1];
+
+                    if (k >= 0 && k < TAM && l >= 0 && l < TAM) {
+                        int temp = e->numeros[i][j];
+                        e->numeros[i][j] = e->numeros[k][l];
+                        e->numeros[k][l] = temp;
+
+                        nodo *novo_nodo = criar_nodo(criar_estado(e->numeros));
+
+                        if (*raiz == NULL) {
+                            *raiz = novo_nodo;
+                        } else {
+                            if (e->numeros[0][0] < (*raiz)->estado->numeros[0][0]) {
+                                novo_nodo->esq = *raiz;
+                                *raiz = novo_nodo;
+                            } else {
+                                nodo *atual = *raiz;
+                                while (atual->dir != NULL) {
+                                    atual = atual->dir;
+                                }
+                                atual->dir = novo_nodo;
+                            }
+                        }
+
+                        temp = e->numeros[i][j];
+                        e->numeros[i][j] = e->numeros[k][l];
+                        e->numeros[k][l] = temp;
+                    }
+                }
+            }
+        }
+    }
+}
+
+void imprimir_estados(estado *e) {
+    int i, j;
+    for (i = 0; i < TAM; i++) {
+        for (j = 0; j < TAM; j++) {
+            printf("%d ", e->numeros[i][j]);
+        }
+        printf("\n");
+    }
+    printf("\n");
+}
+
+void imprimir_passos(nodo *n) {
+    if (n == NULL) {
+        return;
+    }
+    imprimir_passos(n->esq);
+    imprimir_estados(n->estado);
+    imprimir_passos(n->dir);
+}
+
+int main() {
+    int numeros_inicial1[TAM][TAM] = {
+        {1, 2, 3},
+        {6, 5, 4},
+        {0, 7, 8}
+    };
+
+    estado *estado_inicial1 = criar_estado(numeros_inicial1);
+    nodo *raiz1 = criar_nodo(estado_inicial1);
+
+    printf("Exemplo 1:\n");
+    imprimir_passos(raiz1);
+
+    printf("\n");
+
+    int numeros_inicial2[TAM][TAM] = {
+        {1, 7, 0},
+        {6, 5, 4},
+        {3, 2, 8}
+    };
+
+    estado *estado_inicial2 = criar_estado(numeros_inicial2);
+    nodo *raiz2 = criar_nodo(estado_inicial2);
+
+    printf("Exemplo 2:\n");
+    imprimir_passos(raiz2);
+
+    return 0;
+}
